@@ -88,7 +88,7 @@ class SwipeManager {
             return
         }
 
-        accVelX += velX!
+        accVelX += 3* velX!
         // Not enough swiping.
         if abs(accVelX) < accVelXThreshold {
             return
