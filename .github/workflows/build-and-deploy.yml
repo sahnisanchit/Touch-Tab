@@ -1,0 +1,54 @@
+name: Build and Deploy macOS App
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '14.3'  # Adjust the Xcode version as needed
+
+      - name: Install dependencies
+        run: |
+          sudo gem install cocoapods  # If using CocoaPods
+          pod install  # Run only if you use CocoaPods
+
+      - name: Build with Xcode
+        run: |
+          xcodebuild -workspace YourProject.xcworkspace -scheme YourScheme -sdk macosx -configuration Release build
+        env:
+          XCODE_PROJECT: Touch-Tab.xcodeproj  # Update with your project file name
+          XCODE_SCHEME: YourScheme  # Update with your scheme name
+
+      - name: Archive build artifacts
+        run: |
+          xcodebuild -workspace YourProject.xcworkspace -scheme YourScheme -sdk macosx -configuration Release -archivePath $GITHUB_WORKSPACE/build/YourApp.xcarchive archive
+        env:
+          XCODE_PROJECT: Touch-Tab.xcodeproj  # Update with your project file name
+          XCODE_SCHEME: YourScheme  # Update with your scheme name
+
+      - name: Export archive
+        run: |
+          xcodebuild -exportArchive -archivePath $GITHUB_WORKSPACE/build/YourApp.xcarchive -exportOptionsPlist $GITHUB_WORKSPACE/exportOptions.plist -exportPath $GITHUB_WORKSPACE/build
+        env:
+          XCODE_PROJECT: Touch-Tab.xcodeproj  # Update with your project file name
+          XCODE_SCHEME: YourScheme  # Update with your scheme name
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: macOS-App
+          path: $GITHUB_WORKSPACE/build/*.app
